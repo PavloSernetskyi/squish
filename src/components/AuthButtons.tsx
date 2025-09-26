@@ -45,17 +45,28 @@ export default function AuthButtons() {
   };
 
   if (loading) {
-    return <div className="text-gray-600">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
+        <span className="ml-3 text-gray-600">Loading...</span>
+      </div>
+    );
   }
 
   if (user) {
     return (
       <div className="space-y-6">
-        <div className="space-y-4">
-          <p className="text-green-600">✅ Welcome back, {user.email}!</p>
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center">
+            <span className="text-2xl">✅</span>
+          </div>
+          <div>
+            <p className="text-green-600 font-semibold">Welcome back!</p>
+            <p className="text-gray-600 text-sm">{user.email}</p>
+          </div>
           <button 
             onClick={signOut} 
-            className="px-3 py-2 border rounded"
+            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
           >
             Sign out
           </button>
@@ -69,21 +80,31 @@ export default function AuthButtons() {
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-gray-600">Please sign in to access voice sessions:</p>
-      <div className="flex gap-2 items-center">
+    <div className="space-y-6">
+      <div className="text-center">
+        <p className="text-gray-600 mb-6">Enter your email to get started with voice meditation</p>
+      </div>
+      
+      <div className="space-y-4">
         <input 
-          className="border rounded px-3 py-2" 
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none transition-all" 
           placeholder="you@example.com" 
           value={email} 
-          onChange={e => setEmail(e.target.value)} 
+          onChange={e => setEmail(e.target.value)}
+          type="email"
         />
         <button 
           onClick={signInWithOtp} 
-          className="px-4 py-2 rounded bg-black text-white"
+          className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl"
         >
           Send Magic Link
         </button>
+      </div>
+      
+      <div className="text-center">
+        <p className="text-xs text-gray-500">
+          We'll send you a secure link to access your meditation sessions
+        </p>
       </div>
     </div>
   );

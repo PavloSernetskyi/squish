@@ -152,15 +152,24 @@ export default function VoicePanel() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="text-center">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">Start Your Meditation Session</h3>
+        <p className="text-gray-600 text-sm">Choose your preferred duration and begin your journey</p>
+      </div>
+      
       <div>
-        <p className="mb-2 font-medium">Select session length</p>
-        <div className="flex gap-2 flex-wrap">
+        <p className="mb-3 font-medium text-gray-700">Select session length</p>
+        <div className="grid grid-cols-2 gap-3">
           {DURATIONS.map(d => (
             <button
               key={d}
               onClick={() => setMin(d)}
-              className={`px-4 py-2 rounded border ${min === d ? "bg-black text-white" : ""}`}
+              className={`px-4 py-3 rounded-lg font-semibold transition-all ${
+                min === d 
+                  ? "bg-yellow-400 text-gray-900 shadow-lg" 
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
             >
               {d} min
             </button>
@@ -170,67 +179,80 @@ export default function VoicePanel() {
 
       {/* Status Messages */}
       {!sdkReady && (
-        <div className="text-yellow-600 text-sm">
-          Loading voice SDK...
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400"></div>
+            <span className="text-yellow-700 text-sm">Loading voice SDK...</span>
+          </div>
         </div>
       )}
       
       {sdkReady && (
-        <div className="text-green-600 text-sm">
-          ✅ Vapi SDK ready! You can start a meditation session.
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-green-600">✅</span>
+            <span className="text-green-700 text-sm font-medium">Vapi SDK ready! You can start a meditation session.</span>
+          </div>
         </div>
       )}
 
       {/* Speaking indicator */}
       {isActive && (
-        <div className="flex items-center gap-2 text-sm">
-          <div className={`w-3 h-3 rounded-full ${isSpeaking ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
-          <span className="text-gray-600">
-            {isSpeaking ? 'Squish is speaking...' : 'Listening...'}
-          </span>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+          <div className="flex items-center justify-center gap-3">
+            <div className={`w-4 h-4 rounded-full ${isSpeaking ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
+            <span className="text-blue-700 font-medium">
+              {isSpeaking ? 'Squish is speaking...' : 'Listening...'}
+            </span>
+          </div>
         </div>
       )}
 
       {/* Conversation transcript */}
       {transcript.length > 0 && (
-        <div className="bg-gray-50 p-3 rounded-lg max-h-40 overflow-y-auto">
-          <p className="text-sm font-medium text-gray-700 mb-2">Conversation:</p>
-          {transcript.map((msg, i) => (
-            <div key={i} className={`mb-2 text-sm ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-              <span className={`inline-block px-3 py-1 rounded-lg ${
-                msg.role === 'user' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-800'
-              }`}>
-                {msg.text}
-              </span>
-            </div>
-          ))}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-40 overflow-y-auto">
+          <p className="text-sm font-medium text-gray-700 mb-3">Conversation:</p>
+          <div className="space-y-2">
+            {transcript.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <span className={`inline-block px-4 py-2 rounded-lg max-w-xs text-sm ${
+                  msg.role === 'user' 
+                    ? 'bg-yellow-400 text-gray-900' 
+                    : 'bg-white text-gray-800 border border-gray-200'
+                }`}>
+                  {msg.text}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {error && (
-        <div className={`text-sm p-2 rounded ${
+        <div className={`text-sm p-3 rounded-lg ${
           error.startsWith('✅') 
-            ? 'text-green-600 bg-green-50' 
-            : 'text-red-600 bg-red-50'
+            ? 'text-green-700 bg-green-50 border border-green-200' 
+            : 'text-red-700 bg-red-50 border border-red-200'
         }`}>
-          {error.startsWith('✅') ? error : `Error: ${error}`}
+          <div className="flex items-center gap-2">
+            <span>{error.startsWith('✅') ? '✅' : '⚠️'}</span>
+            <span>{error.startsWith('✅') ? error : `Error: ${error}`}</span>
+          </div>
         </div>
       )}
 
-      <div className="flex gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <button 
           onClick={start} 
           disabled={!sdkReady || isLoading || isActive} 
-          className="px-5 py-3 rounded bg-black text-white disabled:opacity-50"
+          className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-yellow-400 hover:bg-yellow-500 text-gray-900 shadow-lg hover:shadow-xl"
         >
           {isLoading ? "Starting..." : isActive ? "Session Active" : "Start Voice Session"}
         </button>
         <button 
           onClick={stop} 
           disabled={!isActive}
-          className="px-5 py-3 rounded border disabled:opacity-50"
+          className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-200 hover:bg-gray-300 text-gray-700"
         >
           Stop
         </button>
