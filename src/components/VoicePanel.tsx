@@ -141,11 +141,13 @@ export default function VoicePanel() {
   const stop = () => {
     console.log("Stopping voice session...");
     
+    // Clean up Vapi instance and reset state
     if (vapiInstance) {
       vapiInstance.stop();
       setVapiInstance(null);
     }
     
+    // Reset all voice session state
     setIsActive(false);
     setIsSpeaking(false);
     setError("✅ Voice session stopped.");
