@@ -41,7 +41,17 @@ export default function Home() {
           <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-yellow-400 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl">🧘</span>
+                <img
+                  src="/squish_logo.png"
+                  alt="Squish Logo"
+                  className="w-12 h-12 object-contain"
+                  onError={(e) => {
+                    // Fallback to emoji if logo not found
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling.style.display = 'block';
+                  }}
+                />
+                <span className="text-2xl hidden">🧘</span>
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Squish</h1>
               <p className="text-gray-600">Your AI voice meditation guide</p>
@@ -59,8 +69,18 @@ export default function Home() {
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+          <div className="flex items-center space-x-3">
+            <img
+              src="/squish_logo.png"
+              alt="Squish Logo"
+              className="w-10 h-10 object-contain"
+              onError={(e) => {
+                // Fallback to emoji if logo not found
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling.style.display = 'flex';
+              }}
+            />
+            <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center hidden">
               <span className="text-lg">🧘</span>
             </div>
             <span className="text-2xl font-bold text-gray-900">Squish</span>
@@ -113,20 +133,69 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Content - Image with Overlay */}
+          {/* Right Content - Meditation Image */}
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src="/placeholder.jpg"
-                alt="Person meditating with AI voice guide"
+                src="/relaxed-female-professional-sitting-with-eyes-closed-while-taking-break-from-work-at-home-SBOF03740.jpg"
+                alt="Woman meditating at her desk with laptop and nature view"
                 className="w-full h-96 object-cover"
+                onError={(e) => {
+                  // Fallback to CSS representation if image not found
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling.style.display = 'block';
+                }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              {/* Fallback CSS representation */}
+              <div className="w-full h-96 bg-gradient-to-br from-blue-50 to-green-50 relative hidden">
+                {/* Window with nature view */}
+                <div className="absolute top-6 left-6 w-40 h-32 bg-gradient-to-br from-green-200 to-blue-200 rounded-xl border-4 border-white shadow-lg">
+                  <div className="w-full h-full bg-gradient-to-b from-green-300 to-green-400 rounded-lg flex items-end justify-center">
+                    <div className="w-12 h-12 bg-green-500 rounded-full mb-3"></div>
+                  </div>
+                </div>
+                
+                {/* Desk */}
+                <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-amber-200 to-amber-100">
+                  {/* Laptop */}
+                  <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 w-20 h-12 bg-gray-300 rounded-lg shadow-lg">
+                    <div className="w-full h-2 bg-gray-400 rounded-lg"></div>
+                  </div>
+                  
+                  {/* Meditation person - woman relaxing */}
+                  <div className="absolute bottom-20 right-12 w-16 h-16 bg-blue-200 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl">🧘‍♀️</span>
+                  </div>
+                  
+                  {/* Desk items - plant, mug, phone */}
+                  <div className="absolute bottom-8 left-12 w-4 h-4 bg-gray-400 rounded-full"></div>
+                  <div className="absolute bottom-8 left-20 w-3 h-3 bg-gray-300 rounded-full"></div>
+                  <div className="absolute bottom-10 left-16 w-2 h-2 bg-gray-500 rounded-full"></div>
+                </div>
+                
+                {/* Floating meditation elements */}
+                <div className="absolute top-12 right-12 w-6 h-6 bg-yellow-300 rounded-full animate-pulse"></div>
+                <div className="absolute top-20 right-20 w-4 h-4 bg-pink-300 rounded-full animate-pulse delay-1000"></div>
+                <div className="absolute top-16 right-8 w-3 h-3 bg-blue-300 rounded-full animate-pulse delay-500"></div>
+              </div>
+              
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
             </div>
-            {/* Floating AI Character */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-xl animate-bounce">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                <span className="text-2xl">🤖</span>
+            
+            {/* Floating Squish Logo */}
+            <div className="absolute -top-6 -right-6 w-28 h-28 bg-yellow-400 rounded-full flex items-center justify-center shadow-xl animate-bounce">
+              <img
+                src="/squish_logo.png"
+                alt="Squish Logo"
+                className="w-20 h-20 object-contain"
+                onError={(e) => {
+                  // Fallback to robot emoji if logo not found
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling.style.display = 'flex';
+                }}
+              />
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center hidden">
+                <span className="text-3xl">🤖</span>
               </div>
             </div>
           </div>
@@ -218,8 +287,18 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+              <div className="flex items-center space-x-3 mb-4">
+                <img
+                  src="/squish_logo.png"
+                  alt="Squish Logo"
+                  className="w-8 h-8 object-contain"
+                  onError={(e) => {
+                    // Fallback to emoji if logo not found
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center hidden">
                   <span className="text-lg">🧘</span>
                 </div>
                 <span className="text-xl font-bold">Squish</span>
