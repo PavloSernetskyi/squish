@@ -1,0 +1,51 @@
+# CodeRabbit Configuration for Squish Meditation App
+version: 2
+
+# Focus areas for this project
+focus:
+  - "React/Next.js best practices"
+  - "TypeScript type safety"
+  - "Tailwind CSS optimization"
+  - "Accessibility improvements"
+  - "Performance optimization"
+  - "Security best practices"
+
+# File patterns to review
+files:
+  - "src/**/*.{ts,tsx,js,jsx}"
+  - "*.{ts,tsx,js,jsx}"
+
+# Ignore patterns
+ignore:
+  - "node_modules/**"
+  - ".next/**"
+  - "dist/**"
+  - "build/**"
+
+# Review settings
+review:
+  # Enable automatic suggestions
+  suggestions: true
+  
+  # Focus on critical issues
+  critical_issues_only: false
+  
+  # Include performance suggestions
+  performance: true
+  
+  # Include security suggestions
+  security: true
+  
+  # Include accessibility suggestions
+  accessibility: true
+
+# Language-specific settings
+languages:
+  typescript:
+    strict_mode: true
+  react:
+    hooks_rules: true
+    component_patterns: true
+  tailwind:
+    class_optimization: true
+    responsive_design: true
