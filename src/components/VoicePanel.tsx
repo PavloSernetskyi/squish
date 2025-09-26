@@ -19,6 +19,33 @@ export default function VoicePanel() {
     setSdkReady(true);
   }, []);
 
+  // Listen for Inkeep actions
+  useEffect(() => {
+    const handleInkeepStartSession = (event: CustomEvent) => {
+      console.log('Inkeep triggered start session:', event.detail);
+      const duration = event.detail?.duration || 10;
+      setMin(duration);
+      // Auto-start the session after a short delay
+      setTimeout(() => {
+        start();
+      }, 500);
+    };
+
+    const handleInkeepSetDuration = (event: CustomEvent) => {
+      console.log('Inkeep triggered set duration:', event.detail);
+      const minutes = event.detail?.minutes || 10;
+      setMin(minutes);
+    };
+
+    window.addEventListener('inkeep-start-session', handleInkeepStartSession as EventListener);
+    window.addEventListener('inkeep-set-duration', handleInkeepSetDuration as EventListener);
+
+    return () => {
+      window.removeEventListener('inkeep-start-session', handleInkeepStartSession as EventListener);
+      window.removeEventListener('inkeep-set-duration', handleInkeepSetDuration as EventListener);
+    };
+  }, []);
+
   // Cleanup effect
   useEffect(() => {
     return () => {
@@ -29,6 +56,7 @@ export default function VoicePanel() {
   }, [vapiInstance]);
 
   const start = async () => {
+    // Check if Vapi SDK is ready before starting session
     if (!sdkReady) {
       setError("Voice SDK not ready yet");
       return;
