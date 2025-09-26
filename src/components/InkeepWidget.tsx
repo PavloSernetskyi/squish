@@ -127,9 +127,6 @@ export default function InkeepWidget() {
             ❓ What is Squish?
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-2">
-          Demo mode - Add Inkeep API key for full features
-        </p>
       </div>
     </div>
   );

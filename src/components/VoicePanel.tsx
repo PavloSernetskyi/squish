@@ -1,11 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Vapi from '@vapi-ai/web';
 
 const DURATIONS = [5, 10, 15, 20];
 
 export default function VoicePanel() {
-  const [sdkReady, setSdkReady] = useState(false);
   const [min, setMin] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -13,11 +12,14 @@ export default function VoicePanel() {
   const [vapiInstance, setVapiInstance] = useState<Vapi | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState<Array<{role: string, text: string}>>([]);
+  const transcriptRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to bottom when transcript updates
   useEffect(() => {
-    console.log("Setting up Vapi SDK...");
-    setSdkReady(true);
-  }, []);
+    if (transcriptRef.current) {
+      transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
+    }
+  }, [transcript]);
 
   // Listen for Inkeep actions
   useEffect(() => {
@@ -56,12 +58,6 @@ export default function VoicePanel() {
   }, [vapiInstance]);
 
   const start = async () => {
-    // Check if Vapi SDK is ready before starting session
-    if (!sdkReady) {
-      setError("Voice SDK not ready yet");
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
@@ -84,14 +80,13 @@ export default function VoicePanel() {
       vapi.on('call-start', () => {
         console.log('Call started');
         setIsActive(true);
-        setError("✅ Voice session started! Squish is ready to guide you.");
+        // Don't show any message for call start - the speaking indicator will show
       });
       
       vapi.on('call-end', () => {
         console.log('Call ended');
         setIsActive(false);
         setIsSpeaking(false);
-        setError("✅ Voice session ended.");
       });
       
       vapi.on('speech-start', () => {
@@ -148,7 +143,7 @@ export default function VoicePanel() {
     
     setIsActive(false);
     setIsSpeaking(false);
-    setError("✅ Voice session stopped.");
+    setError(null); // Clear any error messages
   };
 
   return (
@@ -177,24 +172,6 @@ export default function VoicePanel() {
         </div>
       </div>
 
-      {/* Status Messages */}
-      {!sdkReady && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
-          <div className="flex items-center justify-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400"></div>
-            <span className="text-yellow-700 text-sm">Loading voice SDK...</span>
-          </div>
-        </div>
-      )}
-      
-      {sdkReady && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-green-600">✅</span>
-            <span className="text-green-700 text-sm font-medium">Vapi SDK ready! You can start a meditation session.</span>
-          </div>
-        </div>
-      )}
 
       {/* Speaking indicator */}
       {isActive && (
@@ -210,7 +187,7 @@ export default function VoicePanel() {
 
       {/* Conversation transcript */}
       {transcript.length > 0 && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-40 overflow-y-auto">
+        <div ref={transcriptRef} className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-40 overflow-y-auto">
           <p className="text-sm font-medium text-gray-700 mb-3">Conversation:</p>
           <div className="space-y-2">
             {transcript.map((msg, i) => (
@@ -244,7 +221,7 @@ export default function VoicePanel() {
       <div className="grid grid-cols-2 gap-3">
         <button 
           onClick={start} 
-          disabled={!sdkReady || isLoading || isActive} 
+          disabled={isLoading || isActive} 
           className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-yellow-400 hover:bg-yellow-500 text-gray-900 shadow-lg hover:shadow-xl"
         >
           {isLoading ? "Starting..." : isActive ? "Session Active" : "Start Voice Session"}

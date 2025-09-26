@@ -268,6 +268,40 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">What our users say</h2>
+            <p className="text-xl text-gray-600">Real stories from people who found peace with Squish</p>
+          </div>
+          <div className="max-w-4xl mx-auto">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <img
+                src="/testimonial.png"
+                alt="User testimonials and reviews"
+                className="w-full h-auto object-cover"
+                onError={(e) => {
+                  // Fallback to CSS representation if image not found
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling.style.display = 'block';
+                }}
+              />
+              {/* Fallback CSS representation */}
+              <div className="w-full h-64 bg-gradient-to-br from-yellow-50 to-orange-50 relative hidden flex items-center justify-center">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-yellow-400 rounded-full mx-auto flex items-center justify-center">
+                    <span className="text-2xl">💬</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900">User Testimonials</h3>
+                  <p className="text-gray-600">Real stories from our community</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="bg-yellow-400 py-16">
         <div className="container mx-auto px-4 text-center">
