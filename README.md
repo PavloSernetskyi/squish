@@ -2,15 +2,7 @@
 
 A modern, web-based meditation application that uses AI voice technology to guide users through personalized meditation sessions. Built with Next.js, Supabase, and Vapi AI.
 
-<<<<<<< HEAD
 ![Squish App](https://img.shields.io/badge/Status-Live-brightgreen) ![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue) ![Supabase](https://img.shields.io/badge/Supabase-Database-green)
-=======
-## Landing page
-<img width="1886" height="945" alt="image" src="https://github.com/user-attachments/assets/eadde886-2cb7-4e95-bbb7-49c7d3052c88" />
-
-
-## Features
->>>>>>> 9ae80227fc71604eba389a38756bdbfeeb993919
 
 ## 🌟 Features
 
@@ -226,7 +218,6 @@ pnpm run lint
 pnpm run build
 ```
 
-<<<<<<< HEAD
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -263,6 +254,3 @@ For support, email support@squish.app or join our Discord community.
 ---
 
 **Built with ❤️ for better mental health**
-=======
-Make sure to set all environment variables in your Vercel dashboard.
->>>>>>> 9ae80227fc71604eba389a38756bdbfeeb993919
