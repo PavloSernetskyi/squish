@@ -8,6 +8,15 @@ export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
+    // Check if user just completed authentication via magic link
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('code')) {
+      // User just returned from magic link, show auth modal
+      setShowAuth(true);
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // Listen for Inkeep custom actions
     const handleStartSession = (event: CustomEvent) => {
       console.log('Inkeep triggered start session:', event.detail);
