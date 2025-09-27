@@ -21,9 +21,13 @@ export default function AuthButtons() {
 
     // Listen for auth changes
     const { data: { subscription } } = sb.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // If user just signed in, we don't need to do anything special
+        // The component will automatically show the voice panel
       }
     );
 
@@ -33,10 +37,12 @@ export default function AuthButtons() {
   const signInWithOtp = async () => {
     const { error } = await sb.auth.signInWithOtp({ 
       email, 
-      options: { emailRedirectTo: window.location.origin }
+      options: { 
+        emailRedirectTo: window.location.origin
+      }
     });
     if (error) alert(error.message);
-    else alert("Check your email for the magic link!");
+    else alert("Check your email for the magic link! Click it to return to Squish.");
   };
 
   const signOut = async () => { 
@@ -87,7 +93,7 @@ export default function AuthButtons() {
       
       <div className="space-y-4">
         <input 
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none transition-all" 
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-500" 
           placeholder="you@example.com" 
           value={email} 
           onChange={e => setEmail(e.target.value)}
