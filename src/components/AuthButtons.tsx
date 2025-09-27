@@ -6,7 +6,7 @@ import VoicePanel from "./VoicePanel";
 export default function AuthButtons() {
   const sb = supabaseBrowser();
   const [email, setEmail] = useState("");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ email: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export default function AuthButtons() {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [sb.auth]);
 
   const signInWithOtp = async () => {
     const { error } = await sb.auth.signInWithOtp({ 
@@ -109,7 +109,7 @@ export default function AuthButtons() {
       
       <div className="text-center">
         <p className="text-xs text-gray-500">
-          We'll send you a secure link to access your meditation sessions
+          We&apos;ll send you a secure link to access your meditation sessions
         </p>
       </div>
     </div>

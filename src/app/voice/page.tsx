@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 export default function VoicePage() {
   const router = useRouter();
   const supabase = supabaseBrowser();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ email: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function VoicePage() {
     );
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router, supabase.auth]);
 
   if (loading) {
     return (

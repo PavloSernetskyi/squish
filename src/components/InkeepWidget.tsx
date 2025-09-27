@@ -3,7 +3,9 @@ import { useEffect } from "react";
 
 declare global {
   interface Window {
-    Inkeep: any;
+    Inkeep: {
+      init: (config: any) => void;
+    };
   }
 }
 
