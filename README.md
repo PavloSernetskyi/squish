@@ -2,6 +2,10 @@
 
 A simple, web-only voice meditation app built with Next.js, Supabase, and Vapi.
 
+## Landing page
+<img width="1886" height="945" alt="image" src="https://github.com/user-attachments/assets/eadde886-2cb7-4e95-bbb7-49c7d3052c88" />
+
+
 ## Features
 
 - **Authentication**: Email magic link login via Supabase Auth
