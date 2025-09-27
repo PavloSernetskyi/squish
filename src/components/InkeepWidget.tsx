@@ -4,7 +4,8 @@ import { useEffect } from "react";
 declare global {
   interface Window {
     Inkeep: {
-      init: (config: any) => void;
+      init: (config: Record<string, unknown>) => void;
+      destroy?: () => void;
     };
   }
 }

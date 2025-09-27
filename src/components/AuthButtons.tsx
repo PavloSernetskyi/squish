@@ -6,7 +6,7 @@ import VoicePanel from "./VoicePanel";
 export default function AuthButtons() {
   const sb = supabaseBrowser();
   const [email, setEmail] = useState("");
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<{ email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -57,7 +57,10 @@ export default function Home() {
                   onError={(e) => {
                     // Fallback to emoji if logo not found
                     e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling.style.display = 'block';
+                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (nextElement) {
+                      nextElement.style.display = 'block';
+                    }
                   }}
                 />
                 <span className="text-2xl hidden">🧘</span>
@@ -86,7 +89,10 @@ export default function Home() {
               onError={(e) => {
                 // Fallback to emoji if logo not found
                 e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling.style.display = 'flex';
+                const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                if (nextElement) {
+                  nextElement.style.display = 'flex';
+                }
               }}
             />
             <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center hidden">
@@ -152,7 +158,10 @@ export default function Home() {
                 onError={(e) => {
                   // Fallback to CSS representation if image not found
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling.style.display = 'block';
+                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) {
+                    nextElement.style.display = 'block';
+                  }
                 }}
               />
               {/* Fallback CSS representation */}
@@ -200,7 +209,10 @@ export default function Home() {
                 onError={(e) => {
                   // Fallback to robot emoji if logo not found
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling.style.display = 'flex';
+                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) {
+                    nextElement.style.display = 'flex';
+                  }
                 }}
               />
               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center hidden">
@@ -293,7 +305,10 @@ export default function Home() {
                 onError={(e) => {
                   // Fallback to CSS representation if image not found
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling.style.display = 'block';
+                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) {
+                    nextElement.style.display = 'block';
+                  }
                 }}
               />
               {/* Fallback CSS representation */}
@@ -338,7 +353,10 @@ export default function Home() {
                   onError={(e) => {
                     // Fallback to emoji if logo not found
                     e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) {
+                    nextElement.style.display = 'flex';
+                  }
                   }}
                 />
                 <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center hidden">

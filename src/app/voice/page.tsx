@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 export default function VoicePage() {
   const router = useRouter();
   const supabase = supabaseBrowser();
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<{ email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
