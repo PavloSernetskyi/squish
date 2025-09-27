@@ -10,8 +10,13 @@ export default function Home() {
   useEffect(() => {
     // Check if user just completed authentication via magic link
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('code')) {
+    const code = urlParams.get('code');
+    console.log('URL params:', window.location.search);
+    console.log('Code found:', code);
+    
+    if (code) {
       // User just returned from magic link, show auth modal
+      console.log('Magic link detected, showing auth modal');
       setShowAuth(true);
       // Clean up the URL
       window.history.replaceState({}, document.title, window.location.pathname);

@@ -12,7 +12,9 @@ export default function AuthButtons() {
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
+      console.log('Getting initial session...');
       const { data: { session } } = await sb.auth.getSession();
+      console.log('Initial session:', session?.user?.email);
       setUser(session?.user ?? null);
       setLoading(false);
     };
