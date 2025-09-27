@@ -11,13 +11,25 @@ export default function Home() {
     // Check if user just completed authentication via magic link
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const authCallback = urlParams.get('auth');
+    const error = urlParams.get('error');
+    
     console.log('URL params:', window.location.search);
     console.log('Code found:', code);
+    console.log('Auth callback:', authCallback);
+    console.log('Error:', error);
     
-    if (code) {
+    if (code || authCallback === 'callback' || authCallback === 'success') {
       // User just returned from magic link, show auth modal
       console.log('Magic link detected, showing auth modal');
       setShowAuth(true);
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    if (error) {
+      console.error('Auth error:', error);
+      alert(`Authentication error: ${error}`);
       // Clean up the URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
