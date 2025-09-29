@@ -22,7 +22,6 @@ An AI‑powered, voice‑first meditation and wellness web app built with Next.j
 <img width="1771" height="931" alt="image" src="https://github.com/user-attachments/assets/d13008af-4cef-40d5-9dc1-2f84d726e112" />
 
 
-
 ## Features
 
 - **Voice sessions**: Start and complete guided sessions with real‑time AI voice via Vapi
@@ -37,7 +36,7 @@ An AI‑powered, voice‑first meditation and wellness web app built with Next.j
 - **Framework**: Next.js 15 (App Router), React 19
 - **Styling**: Tailwind CSS 4, PostCSS
 - **Backend**: Next.js API routes
-- **Data**: Supabase (Postgres + Auth)
+- **Database**: Supabase (Postgres + Auth)
 - **Voice/RT**: Vapi (`@vapi-ai/web`)
 - **DX**: TypeScript, ESLint 9
 
@@ -93,9 +92,6 @@ Required:
 - `VAPI_ASSISTANT_ID`
 - `VAPI_PUBLIC_KEY`
 
-Optional:
-- `NEXT_PUBLIC_INKEEP_API_KEY`
-
 > Never commit real secrets. Use environment variables locally and in deployment.
 
 ## Database (Supabase)
@@ -140,10 +136,6 @@ pnpm lint    # Run ESLint
 - Public/anon keys are used in the browser; the service role key should only be used server‑side.
 - See `src/lib/supabase-client.ts` and `src/lib/supabase-server.ts` for usage.
 
-### Inkeep (Optional)
-- Provide `NEXT_PUBLIC_INKEEP_API_KEY` to enable `InkeepWidget`.
-- Remove the widget component if you don’t need it.
-
 ## API Overview
 
 - `POST /api/sessions/start` — Start a meditation session
@@ -163,23 +155,12 @@ The project is optimized for deployment on Vercel.
 3) Add your Vapi webhook URL in Vapi dashboard pointing to `https://YOUR_DOMAIN/api/vapi/webhook`
 4) Redeploy to apply changes
 
-## Screenshots
-
-You can update or replace these with your own app captures:
+## Testimonials
 
 <div>
   <img src="public/testimonial.png" alt="Testimonial" width="600" />
 </div>
 
-## Contributing
-
-Issues and PRs are welcome. Please run `pnpm lint` before submitting changes.
-
-## License
-
-Choose and add a license (e.g., MIT) to the repository, then update this section.
-
----
-
 Made using Next.js, Supabase, and Vapi.
+
 
