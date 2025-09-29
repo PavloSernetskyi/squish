@@ -162,5 +162,7 @@ The project is optimized for deployment on Vercel.
 
 Made using Next.js, Supabase, and Vapi.
 
+<!-- Force Vercel redeploy -->
+
 
 
