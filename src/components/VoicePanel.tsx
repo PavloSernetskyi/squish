@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Vapi from '@vapi-ai/web';
 import { supabaseBrowser } from "@/lib/supabase-client";
 
@@ -14,7 +14,7 @@ export default function VoicePanel() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState<Array<{role: string, text: string}>>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [userStats, setUserStats] = useState<any>(null);
+  const [userStats, setUserStats] = useState<{total_sessions: number, total_meditation_time_sec: number, last_session_at: string} | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when transcript updates
@@ -24,32 +24,6 @@ export default function VoicePanel() {
     }
   }, [transcript]);
 
-  // Listen for Inkeep actions
-  useEffect(() => {
-    const handleInkeepStartSession = (event: CustomEvent) => {
-      console.log('Inkeep triggered start session:', event.detail);
-      const duration = event.detail?.duration || 10;
-      setMin(duration);
-      // Auto-start the session after a short delay
-      setTimeout(() => {
-        start();
-      }, 500);
-    };
-
-    const handleInkeepSetDuration = (event: CustomEvent) => {
-      console.log('Inkeep triggered set duration:', event.detail);
-      const minutes = event.detail?.minutes || 10;
-      setMin(minutes);
-    };
-
-    window.addEventListener('inkeep-start-session', handleInkeepStartSession as EventListener);
-    window.addEventListener('inkeep-set-duration', handleInkeepSetDuration as EventListener);
-
-    return () => {
-      window.removeEventListener('inkeep-start-session', handleInkeepStartSession as EventListener);
-      window.removeEventListener('inkeep-set-duration', handleInkeepSetDuration as EventListener);
-    };
-  }, []);
 
   // Cleanup effect
   useEffect(() => {
@@ -60,12 +34,8 @@ export default function VoicePanel() {
     };
   }, [vapiInstance]);
 
-  // Load user stats on component mount
-  useEffect(() => {
-    loadUserStats();
-  }, []);
 
-  const loadUserStats = async () => {
+  const loadUserStats = useCallback(async () => {
     try {
       const { data: { session } } = await supabaseBrowser().auth.getSession();
       if (session?.access_token) {
@@ -82,9 +52,14 @@ export default function VoicePanel() {
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  };
+  }, []);
 
-  const startSession = async () => {
+  // Load user stats on component mount
+  useEffect(() => {
+    loadUserStats();
+  }, [loadUserStats]);
+
+  const startSession = useCallback(async () => {
     try {
       const { data: { session } } = await supabaseBrowser().auth.getSession();
       if (!session?.access_token) {
@@ -113,9 +88,9 @@ export default function VoicePanel() {
     } catch (error) {
       console.error('Error starting session:', error);
     }
-  };
+  }, []);
 
-  const completeSession = async () => {
+  const completeSession = useCallback(async () => {
     if (!currentSessionId) return;
 
     try {
@@ -146,9 +121,9 @@ export default function VoicePanel() {
     } catch (error) {
       console.error('Error completing session:', error);
     }
-  };
+  }, [currentSessionId, loadUserStats]);
 
-  const start = async () => {
+  const start = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setTranscript([]); // Clear transcript on new session
@@ -228,7 +203,34 @@ export default function VoicePanel() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [startSession, completeSession]);
+
+  // Listen for Inkeep actions
+  useEffect(() => {
+    const handleInkeepStartSession = (event: CustomEvent) => {
+      console.log('Inkeep triggered start session:', event.detail);
+      const duration = event.detail?.duration || 10;
+      setMin(duration);
+      // Auto-start the session after a short delay
+      setTimeout(() => {
+        start();
+      }, 500);
+    };
+
+    const handleInkeepSetDuration = (event: CustomEvent) => {
+      console.log('Inkeep triggered set duration:', event.detail);
+      const minutes = event.detail?.minutes || 10;
+      setMin(minutes);
+    };
+
+    window.addEventListener('inkeep-start-session', handleInkeepStartSession as EventListener);
+    window.addEventListener('inkeep-set-duration', handleInkeepSetDuration as EventListener);
+
+    return () => {
+      window.removeEventListener('inkeep-start-session', handleInkeepStartSession as EventListener);
+      window.removeEventListener('inkeep-set-duration', handleInkeepSetDuration as EventListener);
+    };
+  }, [start]);
 
 
 
@@ -281,12 +283,12 @@ export default function VoicePanel() {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-blue-700">Total Sessions:</span>
-              <span className="font-semibold ml-2">{userStats.profile.total_sessions}</span>
+              <span className="font-semibold ml-2">{userStats.total_sessions}</span>
             </div>
             <div>
               <span className="text-blue-700">Total Time:</span>
               <span className="font-semibold ml-2">
-                {Math.floor(userStats.profile.total_meditation_time_sec / 60)} min
+                {Math.floor(userStats.total_meditation_time_sec / 60)} min
               </span>
             </div>
           </div>
