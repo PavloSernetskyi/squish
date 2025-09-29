@@ -12,8 +12,7 @@ An AI‑powered, voice‑first meditation and wellness web app built with Next.j
 ---
 ## Screenshots
 ### Landing Page
-<img width="1832" height="645" alt="image" src="https://github.com/user-attachments/assets/496bfee6-a7a2-4a3e-b117-3d5fc27a7ee5" />
-
+<img width="1820" height="622" alt="image" src="https://github.com/user-attachments/assets/c25bea9c-2eae-44c9-ad8f-d51eb58b7c38" />
 
 ### How it works
 <img width="1784" height="905" alt="image" src="https://github.com/user-attachments/assets/749e3214-ab46-448a-8ce3-a7f4434ea673" />
@@ -162,5 +161,6 @@ The project is optimized for deployment on Vercel.
 </div>
 
 Made using Next.js, Supabase, and Vapi.
+
 
 
