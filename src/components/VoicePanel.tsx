@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import Vapi from '@vapi-ai/web';
+import { supabaseBrowser } from "@/lib/supabase-client";
 
 const DURATIONS = [5, 10, 15, 20];
 
@@ -12,6 +13,8 @@ export default function VoicePanel() {
   const [vapiInstance, setVapiInstance] = useState<Vapi | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState<Array<{role: string, text: string}>>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [userStats, setUserStats] = useState<any>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when transcript updates
@@ -57,11 +60,103 @@ export default function VoicePanel() {
     };
   }, [vapiInstance]);
 
+  // Load user stats on component mount
+  useEffect(() => {
+    loadUserStats();
+  }, []);
+
+  const loadUserStats = async () => {
+    try {
+      const { data: { session } } = await supabaseBrowser().auth.getSession();
+      if (session?.access_token) {
+        const response = await fetch('/api/user/stats', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+        if (response.ok) {
+          const stats = await response.json();
+          setUserStats(stats);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+    }
+  };
+
+  const startSession = async () => {
+    try {
+      const { data: { session } } = await supabaseBrowser().auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No authentication token');
+      }
+
+      const response = await fetch('/api/sessions/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          duration_min: min,
+          session_type: 'voice_meditation'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start session');
+      }
+
+      const data = await response.json();
+      setCurrentSessionId(data.session_id);
+      console.log('Session started:', data.session_id);
+    } catch (error) {
+      console.error('Error starting session:', error);
+    }
+  };
+
+  const completeSession = async () => {
+    if (!currentSessionId) return;
+
+    try {
+      const { data: { session } } = await supabaseBrowser().auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No authentication token');
+      }
+
+      const response = await fetch('/api/sessions/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          session_id: currentSessionId,
+          rating: 5, // Default rating, could be made user-configurable
+          notes: `Voice meditation session completed. Duration: ${min} minutes.`
+        })
+      });
+
+      if (response.ok) {
+        console.log('Session completed successfully');
+        setCurrentSessionId(null);
+        // Reload user stats
+        loadUserStats();
+      }
+    } catch (error) {
+      console.error('Error completing session:', error);
+    }
+  };
+
   const start = async () => {
     setIsLoading(true);
     setError(null);
+    setTranscript([]); // Clear transcript on new session
 
     try {
+      // Start database session tracking
+      await startSession();
+
       console.log("Setting up Vapi voice session...");
       const res = await fetch("/api/vapi/token");
       
@@ -87,6 +182,8 @@ export default function VoicePanel() {
         console.log('Call ended');
         setIsActive(false);
         setIsSpeaking(false);
+        // Complete the database session
+        completeSession();
       });
       
       vapi.on('speech-start', () => {
@@ -114,6 +211,8 @@ export default function VoicePanel() {
         setError(`Voice error: ${error.message || 'Unknown error'}`);
         setIsActive(false);
         setIsSpeaking(false);
+        // Complete the database session even on error
+        completeSession();
       });
       
       // Start the call
@@ -140,6 +239,9 @@ export default function VoicePanel() {
       vapiInstance.stop();
       setVapiInstance(null);
     }
+    
+    // Complete the database session
+    completeSession();
     
     setIsActive(false);
     setIsSpeaking(false);
@@ -172,6 +274,24 @@ export default function VoicePanel() {
         </div>
       </div>
 
+      {/* User Stats */}
+      {userStats && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-semibold text-blue-900 mb-2">Your Progress</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-blue-700">Total Sessions:</span>
+              <span className="font-semibold ml-2">{userStats.profile.total_sessions}</span>
+            </div>
+            <div>
+              <span className="text-blue-700">Total Time:</span>
+              <span className="font-semibold ml-2">
+                {Math.floor(userStats.profile.total_meditation_time_sec / 60)} min
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Speaking indicator */}
       {isActive && (

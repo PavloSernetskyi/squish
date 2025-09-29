@@ -1,5 +1,6 @@
 "use client";
 import VoicePanel from "@/components/VoicePanel";
+import InkeepWidget from "@/components/InkeepWidget";
 import { supabaseBrowser } from "@/lib/supabase-client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -49,9 +50,16 @@ export default function VoicePage() {
 
   return (
     <main className="p-8 max-w-2xl mx-auto space-y-6">
+      <button
+        onClick={() => router.push('/')}
+        className="text-gray-600 hover:text-gray-900 inline-flex items-center"
+      >
+        <span className="mr-2">←</span> Back
+      </button>
       <h2 className="text-2xl font-semibold">Voice Session</h2>
       <p className="text-gray-700">Choose a duration and start. Your mic will be used in the browser.</p>
       <VoicePanel />
+      <InkeepWidget />
     </main>
   );
 }

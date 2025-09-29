@@ -1,6 +1,5 @@
 "use client";
 import AuthButtons from "@/components/AuthButtons";
-import InkeepWidget from "@/components/InkeepWidget";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -34,36 +33,19 @@ export default function Home() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // Listen for Inkeep custom actions
-    const handleStartSession = (event: CustomEvent) => {
-      console.log('Inkeep triggered start session:', event.detail);
-      setShowAuth(true);
-    };
-
-    const handleSetDuration = (event: CustomEvent) => {
-      console.log('Inkeep triggered set duration:', event.detail);
-    };
-
-    const handleExplainMeditation = () => {
-      console.log('Inkeep triggered explain meditation');
-      // Show a modal or redirect to help section
-    };
-
-    window.addEventListener('inkeep-start-session', handleStartSession as EventListener);
-    window.addEventListener('inkeep-set-duration', handleSetDuration as EventListener);
-    window.addEventListener('inkeep-explain-meditation', handleExplainMeditation);
-
-    return () => {
-      window.removeEventListener('inkeep-start-session', handleStartSession as EventListener);
-      window.removeEventListener('inkeep-set-duration', handleSetDuration as EventListener);
-      window.removeEventListener('inkeep-explain-meditation', handleExplainMeditation);
-    };
+    return () => {};
   }, []);
 
   if (showAuth) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
         <div className="container mx-auto px-4 py-8">
+          <button
+            onClick={() => setShowAuth(false)}
+            className="mb-4 inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <span className="mr-2">←</span> Back
+          </button>
           <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-yellow-400 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -88,7 +70,6 @@ export default function Home() {
             <AuthButtons />
           </div>
         </div>
-        <InkeepWidget />
       </main>
     );
   }
@@ -143,7 +124,7 @@ export default function Home() {
           {/* Left Content */}
           <div className="space-y-8">
             <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-              The most fun way to fix your mental health
+              The most fun way to meditate
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed">
               AI voice meditation that helps you resolve the thoughts and feelings that hold you back
@@ -160,7 +141,6 @@ export default function Home() {
                 className="text-gray-600 hover:text-gray-900 font-semibold text-lg flex items-center group"
               >
                 How it works →
-                <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </Link>
             </div>
           </div>
@@ -414,7 +394,6 @@ export default function Home() {
         </div>
       </footer>
 
-      <InkeepWidget />
     </main>
   );
 }
