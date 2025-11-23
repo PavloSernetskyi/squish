@@ -25,14 +25,36 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get user profile with stats
-    const { data: profile, error: profileError } = await supabase
+    // Get user profile with stats (create if doesn't exist)
+    let { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
 
-    if (profileError) {
+    // If profile doesn't exist, create it
+    if (profileError && profileError.code === 'PGRST116') {
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.name || null,
+          total_sessions: 0,
+          total_meditation_time_sec: 0
+        })
+        .select()
+        .single();
+      
+      if (createError) {
+        console.error('Error creating profile:', createError);
+        return NextResponse.json(
+          { error: "Failed to create user profile" },
+          { status: 500 }
+        );
+      }
+      profile = newProfile;
+    } else if (profileError) {
       console.error('Error fetching profile:', profileError);
       return NextResponse.json(
         { error: "Failed to fetch user stats" },
@@ -56,16 +78,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Return stats in the format expected by VoicePanel
     return NextResponse.json({
-      profile: {
-        email: profile.email,
-        name: profile.name,
-        total_sessions: profile.total_sessions || 0,
-        total_meditation_time_sec: profile.total_meditation_time_sec || 0,
-        last_session_at: profile.last_session_at,
-        created_at: profile.created_at
-      },
-      recent_sessions: recentSessions || []
+      total_sessions: profile.total_sessions || 0,
+      total_meditation_time_sec: profile.total_meditation_time_sec || 0,
+      last_session_at: profile.last_session_at || null
     });
 
   } catch (error) {

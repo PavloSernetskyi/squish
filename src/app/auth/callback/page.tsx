@@ -38,40 +38,39 @@ function AuthCallbackContent() {
           return;
         }
 
-        // If there's a code, exchange it for a session
+        // First, check if we already have a session (Supabase might have set it via hash fragment)
+        const { data: existingSession } = await supabase.auth.getSession();
+        if (existingSession.session) {
+          console.log('Session already exists, user:', existingSession.session.user.email);
+          router.push('/?auth=success');
+          return;
+        }
+
+        // If there's a code, try to exchange it for a session
         if (code) {
           console.log('Exchanging code for session...');
           const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           
           if (exchangeError) {
-            console.error('Code exchange error:', exchangeError);
-            let userMessage = exchangeError.message;
-            if (exchangeError.message.includes('expired') || exchangeError.message.includes('invalid')) {
-              userMessage = 'The magic link has expired or is invalid. Please request a new one.';
-            }
-            router.push(`/?error=${encodeURIComponent(userMessage)}`);
-            return;
-          }
-
-          if (data.session) {
-            console.log('Auth successful, user:', data.session.user.email);
+            console.warn('Code exchange error (will check session anyway):', exchangeError);
+            // Don't return yet - Supabase might have set the session via hash fragment
+            // Continue to check for session below
+          } else if (data.session) {
+            console.log('Auth successful via code exchange, user:', data.session.user.email);
             router.push('/?auth=success');
             return;
           }
         }
 
-        // Fallback: try to get existing session
-        const { data, error: sessionError } = await supabase.auth.getSession();
+        // Final check: try to get session (might have been set via hash fragment or other means)
+        const { data: finalSession, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError) {
+        if (finalSession.session) {
+          console.log('Auth successful (session found), user:', finalSession.session.user.email);
+          router.push('/?auth=success');
+        } else if (sessionError) {
           console.error('Session error:', sessionError);
           router.push(`/?error=${encodeURIComponent(sessionError.message)}`);
-          return;
-        }
-
-        if (data.session) {
-          console.log('Auth successful (existing session), user:', data.session.user.email);
-          router.push('/?auth=success');
         } else {
           console.log('No session found and no code provided');
           router.push('/?error=Please click the magic link from your email to sign in.');
