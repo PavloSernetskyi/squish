@@ -88,7 +88,7 @@ export default function VoicePanel() {
     } catch (error) {
       console.error('Error starting session:', error);
     }
-  }, []);
+  }, [min]);
 
   const completeSession = useCallback(async () => {
     if (!currentSessionId) return;
@@ -121,7 +121,7 @@ export default function VoicePanel() {
     } catch (error) {
       console.error('Error completing session:', error);
     }
-  }, [currentSessionId, loadUserStats]);
+  }, [currentSessionId, loadUserStats, min]);
 
   const start = useCallback(async () => {
     setIsLoading(true);
