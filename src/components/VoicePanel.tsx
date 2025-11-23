@@ -171,17 +171,17 @@ export default function VoicePanel() {
         setIsSpeaking(false);
       });
       
-      vapi.on('message', (message) => {
+      vapi.on('message', (message: { type: string; role?: string; transcript?: string }) => {
         if (message.type === 'transcript') {
           console.log(`${message.role}: ${message.transcript}`);
           setTranscript(prev => [...prev, {
-            role: message.role,
-            text: message.transcript
+            role: message.role || 'unknown',
+            text: message.transcript || ''
           }]);
         }
       });
       
-      vapi.on('error', (error) => {
+      vapi.on('error', (error: Error) => {
         console.error('Vapi error:', error);
         setError(`Voice error: ${error.message || 'Unknown error'}`);
         setIsActive(false);
