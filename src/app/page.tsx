@@ -9,16 +9,27 @@ export default function Home() {
   useEffect(() => {
     // Check if user just completed authentication via magic link
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
+    
+    const code = urlParams.get('code') || hashParams?.get('code');
     const authCallback = urlParams.get('auth');
-    const error = urlParams.get('error');
+    const error = urlParams.get('error') || hashParams?.get('error');
+    const errorDescription = urlParams.get('error_description') || hashParams?.get('error_description');
+    const errorCode = urlParams.get('error_code') || hashParams?.get('error_code');
     
     console.log('URL params:', window.location.search);
+    console.log('Hash:', window.location.hash);
     console.log('Code found:', code);
     console.log('Auth callback:', authCallback);
-    console.log('Error:', error);
+    console.log('Error:', error, 'Error code:', errorCode, 'Description:', errorDescription);
     
-    if (code || authCallback === 'callback' || authCallback === 'success') {
+    // If there's a code in the URL, redirect to callback page
+    if (code && !error) {
+      window.location.href = `/auth/callback?code=${code}`;
+      return;
+    }
+    
+    if (authCallback === 'callback' || authCallback === 'success') {
       // User just returned from magic link, show auth modal
       console.log('Magic link detected, showing auth modal');
       setShowAuth(true);
@@ -27,8 +38,18 @@ export default function Home() {
     }
     
     if (error) {
-      console.error('Auth error:', error);
-      alert(`Authentication error: ${error}`);
+      console.error('Auth error:', error, errorCode, errorDescription);
+      // Decode the error message for better display
+      let userMessage = errorDescription || error;
+      if (errorCode === 'otp_expired') {
+        userMessage = 'The magic link has expired. Please request a new one.';
+      } else if (error === 'access_denied') {
+        userMessage = 'Access denied. The magic link may be invalid or expired. Please try again.';
+      }
+      const decodedError = decodeURIComponent(userMessage);
+      alert(`Authentication error: ${decodedError}`);
+      // Show auth modal so user can try again
+      setShowAuth(true);
       // Clean up the URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }

@@ -12,14 +12,29 @@ function AuthCallbackContent() {
     const handleAuthCallback = async () => {
       try {
         console.log('Handling auth callback...');
-        const code = searchParams.get('code');
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
+        console.log('Current URL:', window.location.href);
+        console.log('Search params:', window.location.search);
+        console.log('Hash:', window.location.hash);
+        
+        // Check both query params and hash fragment for errors
+        const code = searchParams.get('code') || new URLSearchParams(window.location.hash.substring(1)).get('code');
+        const error = searchParams.get('error') || new URLSearchParams(window.location.hash.substring(1)).get('error');
+        const errorDescription = searchParams.get('error_description') || new URLSearchParams(window.location.hash.substring(1)).get('error_description');
+        const errorCode = searchParams.get('error_code') || new URLSearchParams(window.location.hash.substring(1)).get('error_code');
         
         // Check for OAuth errors
         if (error) {
-          console.error('OAuth error:', error, errorDescription);
-          router.push(`/?error=${encodeURIComponent(errorDescription || error)}`);
+          console.error('OAuth error detected:', { error, errorCode, errorDescription });
+          
+          // Provide user-friendly error messages
+          let userMessage = errorDescription || error;
+          if (errorCode === 'otp_expired') {
+            userMessage = 'The magic link has expired. Please request a new one.';
+          } else if (error === 'access_denied') {
+            userMessage = 'Access denied. The magic link may be invalid or expired. Please try again.';
+          }
+          
+          router.push(`/?error=${encodeURIComponent(userMessage)}&error_code=${errorCode || ''}`);
           return;
         }
 
@@ -30,7 +45,11 @@ function AuthCallbackContent() {
           
           if (exchangeError) {
             console.error('Code exchange error:', exchangeError);
-            router.push(`/?error=${encodeURIComponent(exchangeError.message)}`);
+            let userMessage = exchangeError.message;
+            if (exchangeError.message.includes('expired') || exchangeError.message.includes('invalid')) {
+              userMessage = 'The magic link has expired or is invalid. Please request a new one.';
+            }
+            router.push(`/?error=${encodeURIComponent(userMessage)}`);
             return;
           }
 
@@ -54,8 +73,8 @@ function AuthCallbackContent() {
           console.log('Auth successful (existing session), user:', data.session.user.email);
           router.push('/?auth=success');
         } else {
-          console.log('No session found');
-          router.push('/?error=no_session');
+          console.log('No session found and no code provided');
+          router.push('/?error=Please click the magic link from your email to sign in.');
         }
       } catch (err) {
         console.error('Auth callback exception:', err);
