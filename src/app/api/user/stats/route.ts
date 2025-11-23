@@ -26,11 +26,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user profile with stats (create if doesn't exist)
-    let { data: profile, error: profileError } = await supabase
+    const { data: initialProfile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
+
+    let profile = initialProfile;
 
     // If profile doesn't exist, create it
     if (profileError && profileError.code === 'PGRST116') {
@@ -58,22 +60,6 @@ export async function GET(req: NextRequest) {
       console.error('Error fetching profile:', profileError);
       return NextResponse.json(
         { error: "Failed to fetch user stats" },
-        { status: 500 }
-      );
-    }
-
-    // Get recent sessions
-    const { data: recentSessions, error: sessionsError } = await supabase
-      .from('user_sessions')
-      .select('id, duration_min, started_at, completed_at, status, rating')
-      .eq('user_id', user.id)
-      .order('started_at', { ascending: false })
-      .limit(10);
-
-    if (sessionsError) {
-      console.error('Error fetching sessions:', sessionsError);
-      return NextResponse.json(
-        { error: "Failed to fetch recent sessions" },
         { status: 500 }
       );
     }
