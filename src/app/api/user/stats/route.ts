@@ -35,7 +35,8 @@ export async function GET(req: NextRequest) {
     let profile = initialProfile;
 
     // If profile doesn't exist, create it
-    if (profileError && profileError.code === 'PGRST116') {
+    if (profileError && (profileError.code === 'PGRST116' || profileError.message?.includes('No rows'))) {
+      console.log('Profile not found, creating new profile for user:', user.id);
       const { data: newProfile, error: createError } = await supabase
         .from('profiles')
         .insert({
@@ -50,16 +51,26 @@ export async function GET(req: NextRequest) {
       
       if (createError) {
         console.error('Error creating profile:', createError);
+        console.error('User data:', { id: user.id, email: user.email });
         return NextResponse.json(
-          { error: "Failed to create user profile" },
+          { 
+            error: "Failed to create user profile",
+            details: createError.message,
+            code: createError.code
+          },
           { status: 500 }
         );
       }
       profile = newProfile;
+      console.log('Profile created successfully for user:', user.id);
     } else if (profileError) {
       console.error('Error fetching profile:', profileError);
       return NextResponse.json(
-        { error: "Failed to fetch user stats" },
+        { 
+          error: "Failed to fetch user stats",
+          details: profileError.message,
+          code: profileError.code
+        },
         { status: 500 }
       );
     }

@@ -55,8 +55,18 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.profiles (id, email, name)
-  values (new.id, new.email, new.raw_user_meta_data->>'name');
+  values (
+    new.id, 
+    coalesce(new.email, ''),
+    coalesce(new.raw_user_meta_data->>'name', null)
+  )
+  on conflict (id) do nothing;
   return new;
+exception
+  when others then
+    -- Log error but don't fail user creation
+    raise warning 'Failed to create profile for user %: %', new.id, sqlerrm;
+    return new;
 end;
 $$ language plpgsql security definer;
 
