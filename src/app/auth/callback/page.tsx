@@ -105,9 +105,9 @@ function AuthCallbackContent() {
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left">
               <p className="text-sm text-gray-700 font-semibold mb-2">How to open in Safari:</p>
               <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
-                <li>Look for the "Open in Safari" button at the top</li>
+                <li>Look for the &quot;Open in Safari&quot; button at the top</li>
                 <li>Or tap the share button (square with arrow)</li>
-                <li>Select "Safari" from the options</li>
+                <li>Select &quot;Safari&quot; from the options</li>
               </ol>
             </div>
           )}

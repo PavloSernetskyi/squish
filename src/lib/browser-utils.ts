@@ -9,10 +9,19 @@
  * 
  * @returns {boolean} True if user is in an in-app browser
  */
+interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean;
+}
+
+interface WindowWithOpera extends Window {
+  opera?: string;
+}
+
 export function isInAppBrowser(): boolean {
   if (typeof window === 'undefined') return false;
 
-  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  const windowWithOpera = window as WindowWithOpera;
+  const ua = navigator.userAgent || navigator.vendor || windowWithOpera.opera || '';
 
   // Check for common in-app browser patterns
   const inAppPatterns = [
@@ -36,7 +45,8 @@ export function isInAppBrowser(): boolean {
 
   // iOS specific checks
   const isIOS = /iPad|iPhone|iPod/.test(ua);
-  const isStandalone = (window.navigator as any).standalone === false;
+  const navigatorWithStandalone = window.navigator as NavigatorWithStandalone;
+  const isStandalone = navigatorWithStandalone.standalone === false;
   const isSFSafariViewController = /Safari/.test(ua) && !/Version\/\d+/.test(ua) && isIOS;
 
   // Android WebView detection
@@ -53,7 +63,8 @@ export function isInAppBrowser(): boolean {
 export function detectPlatform(): 'ios' | 'android' | 'other' {
   if (typeof window === 'undefined') return 'other';
 
-  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  const windowWithOpera = window as WindowWithOpera;
+  const ua = navigator.userAgent || navigator.vendor || windowWithOpera.opera || '';
 
   if (/iPad|iPhone|iPod/.test(ua)) {
     return 'ios';
@@ -91,14 +102,14 @@ export function redirectToExternalBrowser(url?: string): void {
               // Window was closed or blocked, try next strategy
               tryStrategy2();
             }
-          } catch (e) {
+          } catch {
             // Cross-origin error means it opened, which is good
             console.log('Redirected to external browser');
           }
         }, 100);
         return;
       }
-    } catch (e) {
+    } catch {
       console.log('window.open failed, trying alternative method');
     }
 
