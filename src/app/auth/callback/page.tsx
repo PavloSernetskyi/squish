@@ -1,14 +1,30 @@
 "use client";
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-client";
+import { checkAndRedirectFromInAppBrowser, isInAppBrowser, detectPlatform } from "@/lib/browser-utils";
 
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = supabaseBrowser();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
+    // Check if user is in an in-app browser and redirect to external browser
+    // This must happen before any authentication logic
+    if (isInAppBrowser()) {
+      console.log('In-app browser detected on auth callback, redirecting to external browser...');
+      setIsRedirecting(true);
+      const currentUrl = window.location.href;
+      
+      // Attempt redirect
+      checkAndRedirectFromInAppBrowser(currentUrl);
+      
+      // Return early - the redirect will happen
+      return;
+    }
+
     const handleAuthCallback = async () => {
       try {
         // Check for OAuth errors first
@@ -61,6 +77,44 @@ function AuthCallbackContent() {
 
     handleAuthCallback();
   }, [router, supabase.auth, searchParams]);
+
+  // Show redirect message if in-app browser detected
+  if (isRedirecting) {
+    const platform = detectPlatform();
+    const isIOS = platform === 'ios';
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full mx-auto flex items-center justify-center">
+            <span className="text-3xl">🌐</span>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-gray-900">Opening in Browser</h2>
+            <p className="text-gray-600">
+              {isIOS 
+                ? 'For the best authentication experience, please open this link in Safari. Tap "Open in Safari" when prompted, or use the share button to open in Safari.'
+                : 'For the best authentication experience, please open this link in Chrome or your default browser.'}
+            </p>
+          </div>
+          <div className="pt-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+            <p className="text-sm text-gray-500 mt-2">Redirecting...</p>
+          </div>
+          {isIOS && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left">
+              <p className="text-sm text-gray-700 font-semibold mb-2">How to open in Safari:</p>
+              <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                <li>Look for the "Open in Safari" button at the top</li>
+                <li>Or tap the share button (square with arrow)</li>
+                <li>Select "Safari" from the options</li>
+              </ol>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center">

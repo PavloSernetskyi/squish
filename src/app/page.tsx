@@ -2,17 +2,31 @@
 import AuthButtons from "@/components/AuthButtons";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { checkAndRedirectFromInAppBrowser, isInAppBrowser } from "@/lib/browser-utils";
 
 export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
-    // Check if user just completed authentication via magic link
+    // Check if user is in an in-app browser when trying to authenticate
+    // This works regardless of navigation path (LinkedIn -> Portfolio -> GitHub -> Your App)
+    // The User-Agent persists through the entire navigation chain
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
     
     const code = urlParams.get('code') || hashParams?.get('code');
     const authCallback = urlParams.get('auth');
+    
+    // If there's an auth code or callback, check for in-app browser
+    // This catches users who navigated through multiple sites before reaching your app
+    if ((code || authCallback) && isInAppBrowser()) {
+      console.log('In-app browser detected with auth parameters, redirecting to external browser...');
+      const currentUrl = window.location.href;
+      checkAndRedirectFromInAppBrowser(currentUrl);
+      return;
+    }
+    
+    // Check if user just completed authentication via magic link
     const error = urlParams.get('error') || hashParams?.get('error');
     const errorDescription = urlParams.get('error_description') || hashParams?.get('error_description');
     const errorCode = urlParams.get('error_code') || hashParams?.get('error_code');
