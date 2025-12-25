@@ -2,7 +2,6 @@
 import { supabaseBrowser } from "@/lib/supabase-client";
 import { useState, useEffect } from "react";
 import VoicePanel from "./VoicePanel";
-import { isInAppBrowser, getBrowserWarningMessage } from "@/lib/browser-utils";
 
 export default function AuthButtons() {
   const sb = supabaseBrowser();
@@ -38,27 +37,14 @@ export default function AuthButtons() {
   }, [sb.auth]);
 
   const signInWithOtp = async () => {
-    // Warn user if they're in an in-app browser
-    if (isInAppBrowser()) {
-      const warning = getBrowserWarningMessage();
-      const proceed = confirm(`${warning}\n\nWould you like to continue anyway?`);
-      if (!proceed) return;
-    }
-
     const { error } = await sb.auth.signInWithOtp({ 
       email, 
       options: { 
         emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
-    if (error) {
-      alert(error.message);
-    } else {
-      const message = isInAppBrowser() 
-        ? "Check your email for the magic link! IMPORTANT: When you click the link, make sure to open it in Safari (iOS) or Chrome (Android) for authentication to work."
-        : "Check your email for the magic link! Click it to return to Squish.";
-      alert(message);
-    }
+    if (error) alert(error.message);
+    else alert("Check your email for the magic link! Click it to return to Squish.");
   };
 
   const signOut = async () => { 
