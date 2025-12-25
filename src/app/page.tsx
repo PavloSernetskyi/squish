@@ -24,8 +24,23 @@ export default function Home() {
     console.log('Error:', error, 'Error code:', errorCode, 'Description:', errorDescription);
     
     // If there's a code in the URL, redirect to callback page
+    // Preserve all parameters for mobile compatibility
     if (code && !error) {
-      window.location.href = `/auth/callback?code=${code}`;
+      // Build callback URL with all relevant parameters
+      const callbackUrl = new URL('/auth/callback', window.location.origin);
+      callbackUrl.searchParams.set('code', code);
+      
+      // Preserve any other hash parameters that might be important
+      if (hashParams) {
+        hashParams.forEach((value, key) => {
+          if (key !== 'code' && key !== 'error') {
+            callbackUrl.searchParams.set(key, value);
+          }
+        });
+      }
+      
+      console.log('Redirecting to callback with code:', code);
+      window.location.href = callbackUrl.toString();
       return;
     }
     

@@ -11,11 +11,21 @@ function AuthCallbackContent() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Check for OAuth errors first
-        const error = searchParams.get('error') || new URLSearchParams(window.location.hash.substring(1)).get('error');
-        const errorDescription = searchParams.get('error_description') || new URLSearchParams(window.location.hash.substring(1)).get('error_description');
-        const errorCode = searchParams.get('error_code') || new URLSearchParams(window.location.hash.substring(1)).get('error_code');
+        // Get code and error from both query params and hash fragments
+        // Mobile browsers may put them in different places
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = window.location.hash 
+          ? new URLSearchParams(window.location.hash.substring(1)) 
+          : new URLSearchParams();
         
+        const code = searchParams.get('code') || urlParams.get('code') || hashParams.get('code');
+        const error = searchParams.get('error') || urlParams.get('error') || hashParams.get('error');
+        const errorDescription = searchParams.get('error_description') || urlParams.get('error_description') || hashParams.get('error_description');
+        const errorCode = searchParams.get('error_code') || urlParams.get('error_code') || hashParams.get('error_code');
+        
+        console.log('Auth callback - Code:', code, 'Error:', error, 'Hash:', window.location.hash);
+        
+        // Check for errors first
         if (error) {
           let userMessage = errorDescription || error;
           if (errorCode === 'otp_expired') {
@@ -27,30 +37,43 @@ function AuthCallbackContent() {
           return;
         }
 
-        // Supabase SSR automatically handles PKCE code exchange via hash fragments
-        // Wait a moment for it to process, then check for session
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Check for session (Supabase should have processed the code automatically)
+        // If we have a code, explicitly exchange it for a session
+        // This is critical for mobile browsers that may not handle hash fragments properly
+        if (code) {
+          console.log('Exchanging code for session...');
+          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (exchangeError) {
+            console.error('Code exchange error:', exchangeError);
+            router.push(`/?error=${encodeURIComponent(exchangeError.message)}`);
+            return;
+          }
+          
+          if (exchangeData.session) {
+            console.log('Auth successful via code exchange, user:', exchangeData.session.user.email);
+            // Clean up URL before redirecting
+            window.history.replaceState({}, document.title, window.location.pathname);
+            router.push('/?auth=success');
+            return;
+          }
+        }
+
+        // Fallback: Check for existing session (for cases where code was already processed)
+        // This handles desktop browsers that may have already processed the hash fragment
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionData.session) {
-          console.log('Auth successful, user:', sessionData.session.user.email);
+          console.log('Auth successful (existing session), user:', sessionData.session.user.email);
+          // Clean up URL before redirecting
+          window.history.replaceState({}, document.title, window.location.pathname);
           router.push('/?auth=success');
         } else if (sessionError) {
           console.error('Session error:', sessionError);
           router.push(`/?error=${encodeURIComponent(sessionError.message)}`);
         } else {
-          // Wait a bit more and try again (sometimes Supabase needs a moment)
-          await new Promise(resolve => setTimeout(resolve, 500));
-          const { data: retrySession } = await supabase.auth.getSession();
-          
-          if (retrySession.session) {
-            console.log('Auth successful (retry), user:', retrySession.session.user.email);
-            router.push('/?auth=success');
-          } else {
-            router.push('/?error=Please click the magic link from your email to sign in.');
-          }
+          // No code and no session - likely a direct visit to callback page
+          console.warn('No code or session found in callback');
+          router.push('/?error=Please click the magic link from your email to sign in.');
         }
       } catch (err) {
         console.error('Auth callback exception:', err);

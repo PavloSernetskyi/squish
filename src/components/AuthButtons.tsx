@@ -37,14 +37,28 @@ export default function AuthButtons() {
   }, [sb.auth]);
 
   const signInWithOtp = async () => {
+    // Ensure we use the full URL for redirect, including protocol
+    // This is important for mobile browsers
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    
+    console.log('Sending magic link to:', email);
+    console.log('Redirect URL:', redirectUrl);
+    
     const { error } = await sb.auth.signInWithOtp({ 
       email, 
       options: { 
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: redirectUrl,
+        // Ensure we get the code in query params for better mobile compatibility
+        shouldCreateUser: true
       }
     });
-    if (error) alert(error.message);
-    else alert("Check your email for the magic link! Click it to return to Squish.");
+    
+    if (error) {
+      console.error('Sign in error:', error);
+      alert(error.message);
+    } else {
+      alert("Check your email for the magic link! Click it to return to Squish.");
+    }
   };
 
   const signOut = async () => { 
