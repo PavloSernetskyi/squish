@@ -2,17 +2,29 @@
 import AuthButtons from "@/components/AuthButtons";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { checkAndRedirectFromInAppBrowser, isInAppBrowser } from "@/lib/browser-utils";
 
 export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
-    // Check if user just completed authentication via magic link
+    // Check if user is in an in-app browser when trying to authenticate
+    // This catches users who navigated: LinkedIn -> Portfolio -> GitHub -> Your App
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
     
     const code = urlParams.get('code') || hashParams?.get('code');
     const authCallback = urlParams.get('auth');
+    
+    // If there's an auth code or callback, check for in-app browser
+    if ((code || authCallback) && isInAppBrowser()) {
+      console.log('In-app browser detected with auth parameters, redirecting to external browser...');
+      const currentUrl = window.location.href;
+      checkAndRedirectFromInAppBrowser(currentUrl);
+      return;
+    }
+    
+    // Check if user just completed authentication via magic link
     const error = urlParams.get('error') || hashParams?.get('error');
     const errorDescription = urlParams.get('error_description') || hashParams?.get('error_description');
     const errorCode = urlParams.get('error_code') || hashParams?.get('error_code');
@@ -46,6 +58,12 @@ export default function Home() {
       } else if (error === 'access_denied') {
         userMessage = 'Access denied. The magic link may be invalid or expired. Please try again.';
       }
+      
+      // If error and in-app browser, suggest opening in external browser
+      if (isInAppBrowser()) {
+        userMessage += ' For the best experience, please open this link in Safari (iOS) or Chrome (Android).';
+      }
+      
       const decodedError = decodeURIComponent(userMessage);
       alert(`Authentication error: ${decodedError}`);
       // Show auth modal so user can try again
