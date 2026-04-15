@@ -5,16 +5,19 @@ import VoicePanel from "./VoicePanel";
 
 export default function AuthButtons() {
   const sb = supabaseBrowser();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const [email, setEmail] = useState("");
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSendingLink, setIsSendingLink] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [cooldownIsEstimated, setCooldownIsEstimated] = useState(false);
 
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
-      console.log('Getting initial session...');
       const { data: { session } } = await sb.auth.getSession();
-      console.log('Initial session:', session?.user?.email);
       setUser(session?.user ?? null);
       setLoading(false);
     };
@@ -23,32 +26,163 @@ export default function AuthButtons() {
 
     // Listen for auth changes
     const { data: { subscription } } = sb.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+      (_event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // If user just signed in, we don't need to do anything special
-        // The component will automatically show the voice panel
       }
     );
 
     return () => subscription.unsubscribe();
   }, [sb.auth]);
 
-  const signInWithOtp = async () => {
-    const { error } = await sb.auth.signInWithOtp({ 
-      email, 
-      options: { 
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+  useEffect(() => {
+    if (cooldownSeconds <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setCooldownSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [cooldownSeconds]);
+
+  const parseRetryAfterSeconds = (retryAfter: string | null) => {
+    if (!retryAfter) {
+      return null;
+    }
+
+    const asNumber = Number.parseInt(retryAfter, 10);
+    if (!Number.isNaN(asNumber) && asNumber > 0) {
+      return asNumber;
+    }
+
+    const retryDateMs = Date.parse(retryAfter);
+    if (Number.isNaN(retryDateMs)) {
+      return null;
+    }
+
+    const secondsUntilRetry = Math.ceil((retryDateMs - Date.now()) / 1000);
+    return secondsUntilRetry > 0 ? secondsUntilRetry : null;
+  };
+
+  const getRateLimitWaitSeconds = (response: Response) => {
+    const retryAfter = parseRetryAfterSeconds(response.headers.get("Retry-After"));
+    if (retryAfter) {
+      return { seconds: retryAfter, estimated: false };
+    }
+
+    // Some providers expose reset time via these headers.
+    const resetCandidates = [
+      response.headers.get("x-ratelimit-reset"),
+      response.headers.get("ratelimit-reset"),
+    ];
+
+    for (const value of resetCandidates) {
+      if (!value) continue;
+
+      const asNumber = Number.parseInt(value, 10);
+      if (!Number.isNaN(asNumber) && asNumber > 0) {
+        // Accept either absolute unix timestamp or relative seconds.
+        const isLikelyUnixSeconds = asNumber > 1_000_000_000;
+        const seconds = isLikelyUnixSeconds
+          ? Math.ceil(asNumber - Date.now() / 1000)
+          : asNumber;
+
+        if (seconds > 0) {
+          return { seconds, estimated: false };
+        }
       }
-    });
-    if (error) alert(error.message);
-    else alert("Check your email for the magic link! Click it to return to Squish.");
+    }
+
+    // Fallback estimate for built-in email caps when provider does not expose reset timing.
+    return { seconds: 30 * 60, estimated: true };
+  };
+
+  const signInWithOtp = async () => {
+    if (!email.trim()) {
+      alert("Please enter your email address.");
+      return;
+    }
+
+    if (cooldownSeconds > 0) {
+      if (cooldownIsEstimated) {
+        alert("Please wait 30-60 minutes before requesting another link.");
+      } else {
+        alert(`Please wait ${cooldownSeconds}s before requesting another link.`);
+      }
+      return;
+    }
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      alert("Supabase configuration is missing.");
+      return;
+    }
+
+    setIsSendingLink(true);
+
+    try {
+      const response = await fetch(`${supabaseUrl}/auth/v1/otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          create_user: true,
+          email_redirect_to: `${window.location.origin}/auth/callback`,
+        }),
+      });
+
+      if (!response.ok) {
+        const retryAfterHeader = response.headers.get("Retry-After");
+        const retryAfterSeconds = parseRetryAfterSeconds(retryAfterHeader);
+        const errorBody = await response.json().catch(() => null);
+        const errorMessage =
+          errorBody?.msg ||
+          errorBody?.message ||
+          "Failed to send magic link.";
+
+        if (response.status === 429) {
+          const waitDetails = retryAfterSeconds
+            ? { seconds: retryAfterSeconds, estimated: false }
+            : getRateLimitWaitSeconds(response);
+          const waitSeconds = waitDetails.seconds;
+          setCooldownIsEstimated(waitDetails.estimated);
+          setCooldownSeconds(waitSeconds);
+          alert(
+            waitDetails.estimated
+              ? "Too many requests. Please wait 30-60 minutes and try again."
+              : `Too many requests. Please wait ${waitSeconds}s and try again.`
+          );
+          return;
+        }
+
+        alert(errorMessage);
+        return;
+      }
+
+      setCooldownSeconds(20);
+      setCooldownIsEstimated(false);
+      alert("Check your email for the magic link! Click it to return to Squish.");
+      return;
+    } catch {
+      alert("Network error while sending magic link. Please try again.");
+      return;
+    } finally {
+      setIsSendingLink(false);
+    }
   };
 
   const signOut = async () => { 
-    await sb.auth.signOut(); 
+    const { error } = await sb.auth.signOut({ scope: "local" });
+    if (error) {
+      alert(`Sign out failed: ${error.message}`);
+      return;
+    }
+
     setUser(null);
   };
 
@@ -103,9 +237,14 @@ export default function AuthButtons() {
         />
         <button 
           onClick={signInWithOtp} 
-          className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl"
+          disabled={isSendingLink || cooldownSeconds > 0 || !email.trim()}
+          className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-200 disabled:text-gray-500 disabled:cursor-not-allowed text-gray-900 px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl disabled:shadow-none"
         >
-          Send Magic Link
+          {isSendingLink
+            ? "Sending..."
+            : cooldownSeconds > 0
+              ? (cooldownIsEstimated ? "Wait 30-60 min" : `Wait ${cooldownSeconds}s`)
+              : "Send Magic Link"}
         </button>
       </div>
       
