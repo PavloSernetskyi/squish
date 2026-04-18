@@ -12,7 +12,10 @@ export default function VoicePanel() {
   const [isActive, setIsActive] = useState(false);
   const [vapiInstance, setVapiInstance] = useState<Vapi | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [transcript, setTranscript] = useState<Array<{role: string, text: string}>>([]);
+  /** Live transcript lines; isStreaming means more partials may replace this line */
+  const [transcript, setTranscript] = useState<
+    Array<{ role: string; text: string; isStreaming?: boolean }>
+  >([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [userStats, setUserStats] = useState<{total_sessions: number, total_meditation_time_sec: number, last_session_at: string} | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
@@ -171,15 +174,65 @@ export default function VoicePanel() {
         setIsSpeaking(false);
       });
       
-      vapi.on('message', (message: { type: string; role?: string; transcript?: string }) => {
-        if (message.type === 'transcript') {
+      vapi.on(
+        'message',
+        (message: {
+          type: string;
+          role?: string;
+          transcript?: string;
+          transcriptType?: 'partial' | 'final';
+        }) => {
+          if (message.type !== 'transcript') return;
+
+          const role = message.role || 'unknown';
+          const text = (message.transcript ?? '').trim();
+          if (!text) return;
+
+          const t = message.transcriptType;
+
           console.log(`${message.role}: ${message.transcript}`);
-          setTranscript(prev => [...prev, {
-            role: message.role || 'unknown',
-            text: message.transcript || ''
-          }]);
-        }
-      });
+
+          setTranscript((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+
+            if (t === 'partial') {
+              if (last?.role === role && last.isStreaming) {
+                next[next.length - 1] = { role, text, isStreaming: true };
+              } else {
+                next.push({ role, text, isStreaming: true });
+              }
+              return next;
+            }
+
+            if (t === 'final') {
+              if (last?.role === role && last.isStreaming) {
+                next[next.length - 1] = { role, text, isStreaming: false };
+              } else {
+                next.push({ role, text, isStreaming: false });
+              }
+              return next;
+            }
+
+            // No transcriptType: Vapi still sends cumulative text — merge instead of stacking.
+            if (last?.role === role) {
+              const prevText = last.text;
+              if (text === prevText.trim()) return prev;
+              if (text.startsWith(prevText) || prevText.startsWith(text)) {
+                next[next.length - 1] = {
+                  role,
+                  text: text.length >= prevText.length ? text : prevText,
+                  isStreaming: true,
+                };
+                return next;
+              }
+            }
+
+            next.push({ role, text });
+            return next;
+          });
+        },
+      );
       
       vapi.on('error', (error: Error) => {
         console.error('Vapi error:', error);
