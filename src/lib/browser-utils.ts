@@ -9,10 +9,6 @@
  * 
  * @returns {boolean} True if user is in an in-app browser
  */
-interface NavigatorWithStandalone extends Navigator {
-  standalone?: boolean;
-}
-
 interface WindowWithOpera extends Window {
   opera?: string;
 }
@@ -23,36 +19,57 @@ export function isInAppBrowser(): boolean {
   const windowWithOpera = window as WindowWithOpera;
   const ua = navigator.userAgent || navigator.vendor || windowWithOpera.opera || '';
 
+  // Full mobile browsers (not embedded webviews). OAuth + PKCE must run here without
+  // redirectToExternalBrowser — mis-detecting Chrome iOS used to trap users in loops.
+  if (/\bCriOS\b/i.test(ua) || /\bFxiOS\b/i.test(ua) || /\bEdgiOS\b/i.test(ua)) {
+    return false;
+  }
+  if (/Android/i.test(ua) && /Chrome\/[\d.]+/i.test(ua) && !/;\s*wv\)/i.test(ua)) {
+    return false;
+  }
+  if (/SamsungBrowser/i.test(ua)) {
+    return false;
+  }
+  // Mobile Safari (first-party): Version/x present; not Chrome-on-iOS (already excluded)
+  if (
+    /iPad|iPhone|iPod/i.test(ua) &&
+    /\bVersion\/[\d.]+\b/i.test(ua) &&
+    /Safari/i.test(ua) &&
+    !/\bCriOS\b/i.test(ua)
+  ) {
+    return false;
+  }
+
   // Check for common in-app browser patterns
   const inAppPatterns = [
-    /FBAN|FBAV/i,           // Facebook app
-    /Instagram/i,            // Instagram
-    /GSA/i,                  // Google Search App
-    /Twitter/i,              // Twitter/X
-    /Snapchat/i,            // Snapchat
-    /LinkedIn/i,            // LinkedIn
-    /Line/i,                // Line
-    /OkHttp/i,              // Android in-app browser
-    /Electron/i,            // Electron (desktop apps)
-    /Telegram/i,            // Telegram
-    /WhatsApp/i,            // WhatsApp
-    /Messeng/i,             // Messenger
-    /wv/i,                  // Android WebView
+    /FBAN|FBAV/i, // Facebook app
+    /Instagram/i, // Instagram
+    /GSA/i, // Google Search App in-app
+    /Twitter/i, // Twitter/X
+    /Snapchat/i, // Snapchat
+    /LinkedIn/i, // LinkedIn
+    /Line/i, // Line
+    /OkHttp/i, // Android in-app HTTP stacks
+    /Electron/i, // Electron (desktop apps)
+    /Telegram/i, // Telegram
+    /WhatsApp/i, // WhatsApp
+    /Messeng/i, // Messenger
   ];
 
-  // Check if any pattern matches
-  const matchesInAppPattern = inAppPatterns.some(pattern => pattern.test(ua));
+  const matchesInAppPattern = inAppPatterns.some((pattern) => pattern.test(ua));
 
-  // iOS specific checks
   const isIOS = /iPad|iPhone|iPod/.test(ua);
-  const navigatorWithStandalone = window.navigator as NavigatorWithStandalone;
-  const isStandalone = navigatorWithStandalone.standalone === false;
-  const isSFSafariViewController = /Safari/.test(ua) && !/Version\/\d+/.test(ua) && isIOS;
+  // Embedded SFSafariViewController / custom tabs: Safari token but not normal Mobile Safari
+  const isSFSafariViewController =
+    /Safari/i.test(ua) &&
+    !/\bVersion\/\d+/i.test(ua) &&
+    isIOS &&
+    !/\bCriOS\b/i.test(ua) &&
+    !/\bFxiOS\b/i.test(ua);
 
-  // Android WebView detection
-  const isAndroidWebView = /wv/.test(ua) && /Android/.test(ua);
+  const isAndroidWebView = /Android/i.test(ua) && /;\s*wv\)/i.test(ua);
 
-  return matchesInAppPattern || isStandalone || isSFSafariViewController || isAndroidWebView;
+  return matchesInAppPattern || isSFSafariViewController || isAndroidWebView;
 }
 
 /**
