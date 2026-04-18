@@ -26,7 +26,7 @@ export default function Home() {
       return;
     }
     
-    // Check if user just completed authentication via magic link
+    // Check if user just completed authentication (OAuth callback)
     const error = urlParams.get('error') || hashParams?.get('error');
     const errorDescription = urlParams.get('error_description') || hashParams?.get('error_description');
     const errorCode = urlParams.get('error_code') || hashParams?.get('error_code');
@@ -44,8 +44,8 @@ export default function Home() {
     }
     
     if (authCallback === 'callback' || authCallback === 'success') {
-      // User just returned from magic link, show auth modal
-      console.log('Magic link detected, showing auth modal');
+      // User just returned from auth provider, show auth modal
+      console.log('Auth success param detected, showing auth modal');
       setShowAuth(true);
       // Clean up the URL
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -56,9 +56,10 @@ export default function Home() {
       // Decode the error message for better display
       let userMessage = errorDescription || error;
       if (errorCode === 'otp_expired') {
-        userMessage = 'The magic link has expired. Please request a new one.';
+        userMessage = 'The sign-in link has expired. Please try again.';
       } else if (error === 'access_denied') {
-        userMessage = 'Access denied. The magic link may be invalid or expired. Please try again.';
+        userMessage =
+          'Access was denied. You can try signing in with Google again.';
       }
       const decodedError = decodeURIComponent(userMessage);
       alert(`Authentication error: ${decodedError}`);
@@ -268,7 +269,7 @@ export default function Home() {
                 <span className="text-2xl">📧</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900">1. Sign up</h3>
-              <p className="text-gray-600">Enter your email and get a magic link to access your account</p>
+              <p className="text-gray-600">Sign in with Google to access your account</p>
             </div>
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-yellow-100 rounded-full mx-auto flex items-center justify-center">

@@ -35,20 +35,35 @@ function AuthCallbackContent() {
         if (error) {
           let userMessage = errorDescription || error;
           if (errorCode === 'otp_expired') {
-            userMessage = 'The magic link has expired. Please request a new one.';
+            userMessage = 'The sign-in link has expired. Please try again.';
           } else if (error === 'access_denied') {
-            userMessage = 'Access denied. The magic link may be invalid or expired. Please try again.';
+            userMessage =
+              'Access was denied. You can close this and try signing in again.';
           }
           router.push(`/?error=${encodeURIComponent(userMessage)}`);
           return;
         }
 
-        // Supabase SSR automatically handles PKCE code exchange via hash fragments
-        // Wait a moment for it to process, then check for session
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Check for session (Supabase should have processed the code automatically)
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const code = searchParams.get("code");
+        if (code) {
+          const { error: exchangeError } =
+            await supabase.auth.exchangeCodeForSession(window.location.href);
+          if (exchangeError) {
+            const { data: existing } = await supabase.auth.getSession();
+            if (!existing.session) {
+              console.error("PKCE exchange failed:", exchangeError);
+              router.push(
+                `/?error=${encodeURIComponent(exchangeError.message)}`,
+              );
+              return;
+            }
+          }
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.getSession();
         
         if (sessionData.session) {
           console.log('Auth successful, user:', sessionData.session.user.email);
@@ -65,7 +80,9 @@ function AuthCallbackContent() {
             console.log('Auth successful (retry), user:', retrySession.session.user.email);
             router.push('/?auth=success');
           } else {
-            router.push('/?error=Please click the magic link from your email to sign in.');
+            router.push(
+              '/?error=Sign-in did not complete. Please try signing in with Google again.',
+            );
           }
         }
       } catch (err) {

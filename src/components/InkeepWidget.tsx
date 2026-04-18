@@ -65,7 +65,7 @@ export default function InkeepWidget() {
                   },
                   {
                     question: "How do I start a meditation session?",
-                    answer: "First, sign in with your email. Then select a session length (5, 10, 15, or 20 minutes) and click 'Start Voice Session'. I'll guide you through the meditation using voice AI."
+                    answer: "First, sign in with Google. Then select a session length (5, 10, 15, or 20 minutes) and click 'Start Voice Session'. I'll guide you through the meditation using voice AI."
                   },
                   {
                     question: "What should I expect from a voice meditation?",
