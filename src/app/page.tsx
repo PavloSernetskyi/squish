@@ -1,9 +1,8 @@
 "use client";
 import AuthButtons from "@/components/AuthButtons";
+import InAppBrowserNotice from "@/components/InAppBrowserNotice";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { checkAndRedirectFromInAppBrowser, isInAppBrowser } from "@/lib/browser-utils";
-
 export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
 
@@ -17,15 +16,10 @@ export default function Home() {
     const code = urlParams.get('code') || hashParams?.get('code');
     const authCallback = urlParams.get('auth');
     
-    // If there's an auth code or callback, check for in-app browser
-    // This catches users who navigated through multiple sites before reaching your app
-    if ((code || authCallback) && isInAppBrowser()) {
-      console.log('In-app browser detected with auth parameters, redirecting to external browser...');
-      const currentUrl = window.location.href;
-      checkAndRedirectFromInAppBrowser(currentUrl);
-      return;
-    }
-    
+    // Do not auto-redirect in-app browsers when OAuth params are present — that caused
+    // reload loops. /auth/callback completes the session; InAppBrowserNotice guides users
+    // who opened the site from GitHub/Telegram/etc. to use Safari/Chrome.
+
     // Check if user just completed authentication (OAuth callback)
     const error = urlParams.get('error') || hashParams?.get('error');
     const errorDescription = urlParams.get('error_description') || hashParams?.get('error_description');
@@ -153,6 +147,10 @@ export default function Home() {
           </button>
         </nav>
       </header>
+
+      <div className="container mx-auto max-w-3xl px-4 pt-2">
+        <InAppBrowserNotice />
+      </div>
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16">

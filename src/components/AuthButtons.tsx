@@ -2,6 +2,7 @@
 import { supabaseBrowser } from "@/lib/supabase-client";
 import { useState, useEffect } from "react";
 import VoicePanel from "./VoicePanel";
+import InAppBrowserNotice from "./InAppBrowserNotice";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -139,6 +140,8 @@ export default function AuthButtons() {
 
   return (
     <div className="space-y-6">
+      <InAppBrowserNotice />
+
       <div className="text-center">
         <p className="text-gray-600 mb-6">
           Sign in with Google to get started with voice meditation
